@@ -34,9 +34,9 @@ DISCIPLINES = [
     'Здоровье и физическая культура',
     'Внеучебные организации'
 ]
-SUBSCRIPHED_DISCIPLINES_MESSAGE = "Выберите дисциплину по которой можете помочь студентам:\n"
+SUBSCRIPHED_DISCIPLINES_MESSAGE = "Выбери дисциплину по которой можешь помочь студентам:\n"
 for i, discipline in enumerate(DISCIPLINES):
-    SUBSCRIPHED_DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
+    SUBSCRIPHED_DISCIPLINES_MESSAGE += f"**{i + 1}.** {discipline}\n"
 
 SUBSCRIBED_DISCIPLINES_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
@@ -48,63 +48,50 @@ SUBSCRIBED_DISCIPLINES_KEYBOARD = ReplyKeyboardMarkup(
     one_time_keyboard=True
 )
 
+ACTIONS_KEYBOARD = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Подать заявку"),
+            KeyboardButton(text="Изменить свою дисциплину")
+        ]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.reply(
-        "Привет! Для более продуктивного обучения в ДВФУ был создан этот телеграмм-бот, позволяющий находить ответы на на интересующие вопросы, помогать другим студентам в обучении по дисциплинам, которые тебе хорошо знакомы, искать людей, желающих организовывать учебные/внеучебные кружки. Надеемся ты найдешь, то что искал! ",
+        "Привет!\n Для более продуктивного обучения в ДВФУ был создан этот телеграмм-бот, позволяющий находить ответы на на интересующие вопросы, помогать другим студентам в обучении по дисциплинам, которые тебе хорошо знакомы, искать людей, желающих организовывать учебные/внеучебные кружки.\n Надеемся ты найдешь, то что искал! ",
 
         reply_markup=SUBSCRIBED_DISCIPLINES_KEYBOARD)
 
 
-dp.message()
-async def show_disciplines_list(message: types.Message):
-    await message.reply(SUBSCRIPHED_DISCIPLINES_MESSAGE, reply_markup=SUBSCRIBED_DISCIPLINES_KEYBOARD)
-
 @dp.message()
-async def update_subscribed_disciplines(message: types.Message):
+async def show_disciplines_list(message: types.Message):
     user_id = message.from_user.id
     username = message.from_user.username
-    if message.text == "Выбрать свою дисциплину":
-        await message.reply(SUBSCRIPHED_DISCIPLINES_MESSAGE, reply_markup=SUBSCRIBED_DISCIPLINES_KEYBOARD)
-    else:
-        disciplines = [DISCIPLINES[int(i.split('.')[0]) - 1] for i in message.text.split('\n') if i[0].isdigit()]
 
-        user = User.get_or_create(user_id=user_id, username=username, defaults={'subscribed_disciplines': disciplines})[0]
+    if message.text == "Выбери свою дисциплину, указав ее номер в списке":
+        await message.reply(SUBSCRIPHED_DISCIPLINES_MESSAGE, reply_markup=SUBSCRIBED_DISCIPLINES_KEYBOARD)
+    elif any(char.isdigit() for char in message.text):
+        selected_disciplines = [int(i.split('.')[0]) for i in message.text.split('\n') if i[0].isdigit()]
+        disciplines = [DISCIPLINES[idx - 1] for idx in selected_disciplines if 1 <= idx <= 19]
+
+        if len(disciplines) == 0:
+            await message.reply(
+                "Пожалуйста, выбери дисциплины, используя цифры, соответсвующие номеру желаемой дисциплины")
+            return
+
+        user = User.get_or_create(user_id=user_id, username=username, defaults={'subscribed_disciplines': disciplines})[
+            0]
         user.save()
         db.commit()
 
-        await message.reply("Дисциплины успешно обновлены.")
-
-
-@dp.message()
-async def create_help_request(message: types.Message):
-    user_id = message.from_user.id
-    discipline = message.text
-    request_link = f"https://t.me/{message.from_user.username}"
-
-    help_request = HelpRequest.get_or_create(user_id=user_id, discipline=discipline, request_link=request_link,
-                                             defaults={'anonymous': False})[0]
-    help_request.save()
-
-    await message.reply(f"Заявка на помощь в дисциплине {discipline} успешно создана. Ваша ссылка: {request_link}")
-
-
-@dp.message()
-async def change_disciplines(message: types.Message):
-    user_id = message.from_user.id
-    username = message.from_user.username
-
-    user = User.get(User.user_id == user_id)
-    current_disciplines = set(user.subscribed_disciplines.split(','))
-
-    for discipline in DISCIPLINES:
-        if discipline not in current_disciplines:
-            button = KeyboardButton(discipline)
-            SUBSCRIBED_DISCIPLINES_KEYBOARD.add(button)
-
-    await message.reply("Пожалуйста, выберите дисциплины, которые вы хотите изменить.",
-                        reply_markup=SUBSCRIBED_DISCIPLINES_KEYBOARD)
+        return await message.reply(
+            f"Выбрана дисциплина: {disciplines}.\n Теперь ты сможешь помогать другим студентам тоже в ней разобраться\nКоманды которыми ты можешь воспользоваться:\n*Подать заявку* - ты сможешь попросить помощи у студентов по необходимой дисциплине",
+            reply_markup=ACTIONS_KEYBOARD)
 
 
 async def main():

@@ -44,10 +44,6 @@ SUBSCRIPHED_DISCIPLINES_MESSAGE = "Выбери дисциплину по кот
 for i, discipline in enumerate(DISCIPLINES):
     SUBSCRIPHED_DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
 
-CHANGE_DISCIPLINES_MESSAGE = "Измени дисциплину по которой можешь помочь студентам:\n"
-for i, discipline in enumerate(DISCIPLINES):
-    SUBSCRIPHED_DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
-
 
 SUBSCRIBED_DISCIPLINES_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[

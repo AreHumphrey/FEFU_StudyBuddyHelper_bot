@@ -35,13 +35,19 @@ DISCIPLINES = [
     'Здоровье и физическая культура',
     'Внеучебные организации'
 ]
+
+DISCIPLINES_MESSAGE = "Выбери дисциплину:\n"
+for i, discipline in enumerate(DISCIPLINES):
+    DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
+
 SUBSCRIPHED_DISCIPLINES_MESSAGE = "Выбери дисциплину по которой можешь помочь студентам, указав ее номер в списке:\n"
 for i, discipline in enumerate(DISCIPLINES):
     SUBSCRIPHED_DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
 
-CHANGE_DISCIPLINES_MESSAGE = "Измени дисциплину по которой можешь помочь студентам, написав ее в формате:\nПоменяй на №"
+CHANGE_DISCIPLINES_MESSAGE = "Измени дисциплину по которой можешь помочь студентам:\n"
 for i, discipline in enumerate(DISCIPLINES):
     SUBSCRIPHED_DISCIPLINES_MESSAGE += f"{i + 1}. {discipline}\n"
+
 
 SUBSCRIBED_DISCIPLINES_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
@@ -57,13 +63,16 @@ ACTIONS_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="Подать заявку"),
-            KeyboardButton(text="Изменить свою дисциплину"),
+            KeyboardButton(text="Изменить свою дисциплину")
+        ],
+        [
             KeyboardButton(text="Посмотреть заявки")
         ]
     ],
     resize_keyboard=True,
     one_time_keyboard=True
 )
+
 
 
 @dp.message(Command("start"))
@@ -98,7 +107,7 @@ async def request_help(message: types.Message):
     user_id = message.from_user.id
 
     await message.reply(
-        "Вы хотите подать заявку? Выберите дисциплину по которой будет ваша заявка:\n" + SUBSCRIPHED_DISCIPLINES_MESSAGE)
+        "Вы хотите подать заявку? Выберите дисциплину по которой будет ваша заявка:\n" + DISCIPLINES_MESSAGE + "\nУкажи номер дисциплины в формате  <b>№(1-19)</b>", parse_mode=ParseMode.HTML)
 
 
 @dp.message(lambda message: message.text.startswith("№"))
@@ -180,7 +189,7 @@ async def show_disciplines_list(message: types.Message):
 
 @dp.message(lambda message: message.text == "Изменить свою дисциплину")
 async def show_disciplines_list(message: types.Message):
-    await message.reply(CHANGE_DISCIPLINES_MESSAGE, reply_markup=ACTIONS_KEYBOARD)
+    await message.reply(DISCIPLINES_MESSAGE + "Напиши сообщение в формате:\n <b>Поменяй на №</b>", reply_markup=ACTIONS_KEYBOARD,  parse_mode=ParseMode.HTML,)
 
 
 @dp.message(lambda message: message.text)

@@ -1,12 +1,10 @@
 import asyncio
-import os
 import logging
-from email import message
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from config import TOKEN
 from models import User, HelpRequest, db
@@ -93,6 +91,7 @@ async def handle_view_requests(message: types.Message):
             await bot.send_message(request.user_id, f"Появилась новая заявка по вашей выбранной дисциплине!\n\n"
                                                     f"Текст заявки:\n\n {request.request_link}\n\n"
                                                     f"{author_contacts}", reply_markup=ACTIONS_KEYBOARD)
+
 
 @dp.message(lambda message: message.text == "Подать заявку")
 async def request_help(message: types.Message):
@@ -192,18 +191,13 @@ async def save_request_and_nickname(message: types.Message):
         await message.reply("Произошла ошибка. Пожалуйста, попробуйте еще раз.")
         return
 
-    user_request = HelpRequest.get_or_none(user_id=user_id, discipline=user.subscribed_disciplines)
-
-    if not user_request:
-        user_request = HelpRequest(user_id=user_id, discipline=user.subscribed_disciplines,
-                                   request_link=message.text,
-                                   anonymous=True)
-        user_request.save()
-        db.commit()
-        await message.reply(f"Спасибо за вашу заявку!\n\nТекст заявки: {user_request.request_link}\n\nОжидайте ответа.",
-                            reply_markup=ACTIONS_KEYBOARD)
-
-
+    user_request = HelpRequest(user_id=user_id, discipline=user.subscribed_disciplines,
+                               request_link=message.text,
+                               anonymous=True)
+    user_request.save()
+    db.commit()
+    await message.reply(f"Спасибо за вашу заявку!\n\nТекст заявки: {user_request.request_link}\n\nОжидайте ответа.",
+                        reply_markup=ACTIONS_KEYBOARD)
 
 
 async def main():
